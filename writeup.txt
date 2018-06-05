@@ -1,0 +1,104 @@
+MULTI PARTY CHAT SYSTEM
+
+
+Code Implementation
+	In the multi-party chat system created by us, we have used shared memory to send all the messages sent from one user to another. If there are n users in the chat system, then there will be n+1 shared memories created, one for each user and a common one for the global chat. To create a shared memory for each of the new users that are added to the system, a new folder is created by the name of the user(this also helps in determining username collisions), and it is used to make the key for the shared memory. 
+
+	For sending global data, we write on the global shared memory, whereas if a personal message is to be sent, we first write a users name with a '$' before it and then write a message, which would be written to the particular users shared memory.
+
+	All the users constantly check whether there exists some data on their global or personal shared memories, if it does then it outputs the data along with whetehr it is global or personal chat and the username. It sleeps for 1 sec (so that all other users read the data in case of global chat) and then erases it.
+
+	**We have also use threads to make the chat system more smooth to use by simultaneously outputting or taking input, whichever event occurs first.
+
+
+Code Description
+	-We have created 2 structures in our code
+		-message: For the message that is to be sent 
+		-user: Having description of the user. The global shared memory is a pointer to user struct
+
+	-There are two functions in the code
+		-inp: It is used for taking in input from stdin and it outputs the recieved value to the shared memory(pointer to which it recieves from main memory). It also handles cases in which the user wants exit the system or wants to send a personal message
+		
+		-main:It defines the global and personal shared memory addresses for the particular user and it invokes the thread inp in parallel to itself. After this it goes into an infinite loop in which it waits for a read value to occur on shared memory and when it does it outputs it on stdout. The infinite loop exits when the user types exit.
+
+	The above two functions are made to run in parallel, in which one handles the input from stdin and the other handles the output ot standard out.
+
+
+Compiling And Testing
+	Compiling: Go to the folder and type 'make all'. It will create the object files.
+	
+	Testing: Open several terminals and, after compiling, run the chat program on each one by ./chat. This behaves as though there are many different clients on the system and can talk in group or personally to each other 
+
+
+Inputs
+	Start three instances of the chat system and name them Kim, Jay and Mark and input the following in the given order
+
+	Kim			Jay			Mark
+	Hey
+				Hi!
+							$Kim
+							I'm Mark
+	$Mark
+	Hello
+				Anyone?			
+	exit
+				exit
+							exit
+
+
+Output
+
+	The output for Kim would be:-
+		Enter your username:Kim
+		No. of connected Users:1
+		Use "$name" to send personal message to "name"
+		Else, all messages would be sent to global chat
+		Type "exit" to escape
+		Hey
+		(Global Chat)Jay:Hi!
+		(Personal Chat)Mark:I'm Mark
+		$Mark
+		(Personal Chat with Mark)You:Hello
+		(Global Chat)Jay:Anyone?
+		exit
+
+	The output for Jay would be:-
+		Enter your username:Jay
+		No. of connected Users:2
+		Use "$name" to send personal message to "name"
+		Else, all messages would be sent to global chat
+		Type "exit" to escape
+		(Global Chat)Kim:Hey
+		Hi!
+		Anyone?
+		exit
+
+	The output for Mark would be:-
+		Enter your username:Mark   
+		No. of connected Users:3
+		Use "$name" to send personal message to "name"
+		Else, all messages would be sent to global chat
+		Type "exit" to escape
+		(Global Chat)Kim:Hey
+		(Global Chat)Jay:Hi!
+		$Kim
+		(Personal Chat with Kim)You:I'm Mark
+		(Personal Chat)Kim:Hello
+		(Global Chat)Jay:Anyone?
+		exit
+
+	Interpretation:-
+		1. Kim writes Hey and Jay writes Hi! globally and it shows on the other two users system
+		2. Mark sends a personal message to Kim and Kim replies Mark. This conversation is hidden from Jay
+		3. Jay writes to global chat 
+
+
+
+
+
+Errors Handled
+	1. The chat system detects a username collision and prompts for a new username
+	2. In case something is written after the symbol $ and it is not a user then it prints it to global chat
+	3. Errors caused by in-built functions are handled by perror and passing the error passing function as the argument
+	4. Whenever a user is removed, its shared memory along with its directory is also deleted
+	5. If the last user from the system also exits, then the global shared memory space is also removed.Hence the global memory exists from when the first user joins the system and until the last user leaves the system
